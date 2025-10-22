@@ -1,0 +1,104 @@
+=====================================
+    PDF CHATBOT - QUICK START
+=====================================
+
+📦 STEP 1: INSTALL DEPENDENCIES
+---------------------------------
+cd C:\Users\Administrator\pdf-chatbot
+python -m venv venv
+venv\Scripts\activate          (Windows)
+source venv/bin/activate       (Mac/Linux)
+pip install -r requirements.txt
+
+
+🔑 STEP 2: GET API KEY
+---------------------------------
+Choose ONE:
+
+Option A - Gemini (FREE):
+→ Visit: https://makersuite.google.com/app/apikey
+→ Sign in with Google
+→ Click "Create API Key"
+→ Copy key
+
+Option B - OpenAI (PAID):
+→ Visit: https://platform.openai.com/api-keys
+→ Sign in
+→ Create new key
+→ Copy key
+
+Option C - Anthropic (PAID):
+→ Visit: https://console.anthropic.com/
+→ Sign in
+→ Generate API key
+→ Copy key
+
+
+⚙️ STEP 3: CONFIGURE
+---------------------------------
+copy .env.example .env         (Windows)
+cp .env.example .env           (Mac/Linux)
+
+Edit .env:
+  LLM_PROVIDER=gemini
+  GOOGLE_API_KEY=your_actual_key_here
+
+Save file.
+
+
+🚀 STEP 4: RUN
+---------------------------------
+streamlit run app.py
+
+→ Browser opens at: http://localhost:8501
+
+
+📄 STEP 5: USE
+---------------------------------
+1. Upload PDF in sidebar
+2. Click "🚀 Process Documents"
+3. Wait 10-30 seconds
+4. Ask questions in chat
+5. Get AI-powered answers!
+
+
+💡 EXAMPLE QUESTIONS
+---------------------------------
+• "What is this document about?"
+• "Summarize the main points"
+• "What does it say about [topic]?"
+• "Who are the key people mentioned?"
+
+
+❌ TROUBLESHOOTING
+---------------------------------
+Problem: Python not found
+→ Install from python.org
+
+Problem: API key error
+→ Check .env file exists
+→ Verify key is correct
+→ No spaces around =
+
+Problem: Port in use
+→ streamlit run app.py --server.port 8502
+
+Problem: Slow processing
+→ Use smaller PDFs
+→ Check internet speed
+
+
+📚 MORE HELP
+---------------------------------
+Full docs: README.md
+Setup guide: SETUP_GUIDE.md
+Demo script: DEMO_SCENARIO.md
+Debug help: TROUBLESHOOTING.md
+
+
+✅ YOU'RE READY!
+---------------------------------
+Built with Python, LangChain, LangGraph & Streamlit
+Demo-ready for Thursday 🎉
+
+Good luck!

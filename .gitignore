@@ -1,0 +1,44 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+*.egg-info/
+dist/
+build/
+
+# Streamlit
+.streamlit/
+
+# Environment variables (IMPORTANT: Don't commit API keys!)
+.env
+
+# Vector databases
+chroma_db/
+*.faiss
+*.pkl
+
+# Uploaded PDFs (optional - uncomment if you don't want to commit PDFs)
+# backend/pdfs/*.pdf
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Temporary files
+uploaded_pdfs/
+temp/
+tmp/
