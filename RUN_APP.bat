@@ -28,6 +28,6 @@ echo   READY! Browser will open automatically
 echo   URL: http://localhost:8501
 echo ========================================
 echo.
-python -m streamlit run app.py
+E:\miniconda\python.exe -m streamlit run app.py
 
 pause

@@ -129,6 +129,17 @@ class PDFChatbot:
                 "source_documents": []
             }
 
+        # Handle greetings and general conversation
+        question_lower = question.lower().strip()
+        greetings = ['hi', 'hello', 'hey', 'good morning', 'good afternoon', 'good evening']
+
+        if question_lower in greetings or any(greeting in question_lower for greeting in greetings):
+            return {
+                "answer": "Hello! I'm your PDF assistant. I have loaded QSS policy documents and I'm ready to answer questions about them. You can ask me about:\n\n- Company headquarters and information\n- Leave policies\n- Maternity policy\n- Dress code policy\n\nWhat would you like to know?",
+                "sources": "",
+                "source_documents": []
+            }
+
         # Get response from QA chain
         response = self.qa_chain({"question": question})
 
