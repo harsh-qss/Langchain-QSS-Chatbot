@@ -135,24 +135,59 @@ class PDFChatbot:
 
         if question_lower in greetings or any(greeting in question_lower for greeting in greetings):
             return {
-                "answer": "Hello! I'm your PDF assistant. I have loaded QSS policy documents and I'm ready to answer questions about them. You can ask me about:\n\n- Company headquarters and information\n- Leave policies\n- Maternity policy\n- Dress code policy\n\nWhat would you like to know?",
+                "answer": "Hello! I'm your AI assistant.\n\n What would you like to know?",
                 "sources": "",
                 "source_documents": []
             }
 
-        # Get response from QA chain
-        response = self.qa_chain({"question": question})
+        # Check if question is likely about the documents or general knowledge
+        # Keywords that suggest PDF/document-specific questions
+        pdf_keywords = [
+            'company', 'policy', 'policies', 'leave', 'maternity', 'dress code',
+            'headquarters', 'office', 'employee', 'document', 'pdf', 'according to',
+            'qss', 'technooft', 'organization', 'work', 'salary', 'benefit'
+        ]
 
-        # Extract answer and sources
-        answer = response.get("answer", "")
-        source_documents = response.get("source_documents", [])
-        sources = format_sources(source_documents)
+        is_pdf_question = any(keyword in question_lower for keyword in pdf_keywords)
 
-        return {
-            "answer": answer,
-            "sources": sources,
-            "source_documents": source_documents
-        }
+        # For PDF-specific questions, use the QA chain (searches documents)
+        if is_pdf_question:
+            response = self.qa_chain({"question": question})
+            answer = response.get("answer", "")
+            source_documents = response.get("source_documents", [])
+            sources = format_sources(source_documents)
+
+            return {
+                "answer": answer,
+                "sources": sources,
+                "source_documents": source_documents
+            }
+
+        # For general questions, use LLM directly without document search
+        else:
+            try:
+                # Use the LLM directly for general knowledge questions
+                from langchain.schema import HumanMessage
+
+                messages = [HumanMessage(content=question)]
+                response = self.llm(messages)
+                answer = response.content if hasattr(response, 'content') else str(response)
+
+                return {
+                    "answer": answer + "\n\n_Note: This is a general answer. For company-specific information, please ask about company policies._",
+                    "sources": "",
+                    "source_documents": []
+                }
+            except Exception as e:
+                # Fallback to QA chain if direct LLM call fails
+                response = self.qa_chain({"question": question})
+                answer = response.get("answer", "")
+
+                return {
+                    "answer": answer,
+                    "sources": "",
+                    "source_documents": []
+                }
 
     def is_ready(self) -> bool:
         """Check if chatbot is ready (has PDFs loaded)."""

@@ -8,7 +8,7 @@ from chatbot import create_chatbot
 
 # Page configuration
 st.set_page_config(
-    page_title="PDF Chatbot",
+    page_title="QSS Chatbot",
     page_icon="💬",
     layout="centered"
 )
@@ -24,7 +24,7 @@ if "chatbot" not in st.session_state:
             st.stop()
 
 # Title
-st.title("💬 PDF Chatbot")
+st.title("💬 QSS Chatbot")
 
 # Check if chatbot is ready
 if not st.session_state.chatbot.is_ready():
