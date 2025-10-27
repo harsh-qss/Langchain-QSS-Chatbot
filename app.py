@@ -32,6 +32,62 @@ if not st.session_state.chatbot.is_ready():
     st.info("Please add PDF files to the backend/pdfs folder and restart the application")
     st.stop()
 
+# Welcome message when chat is empty
+if len(st.session_state.messages) == 0:
+    st.markdown("""
+    ### 👋 Welcome to QSS Chatbot!
+
+    I can help you with:
+    - 📚 Questions about the PDF documents loaded in the system
+    - 🔍 Finding specific information from your documents
+
+    **Try asking:**
+    - "What is the dress code policy?"
+    - "Tell me about the leave policy"
+    - "Where is the QSS office located?"
+    """)
+
+    st.divider()
+
+    # Sample question buttons
+    st.subheader(" Quick Start - Click to ask:")
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        if st.button("📋 Dress Code"):
+            st.session_state.sample_question = "What is the dress code policy?"
+
+    with col2:
+        if st.button("🏖️ Leave Policy"):
+            st.session_state.sample_question = "What is the leave policy?"
+
+    with col3:
+        if st.button("🏢 Office Info"):
+            st.session_state.sample_question = "Tell me about QSS office details"
+
+    # Handle sample question clicks
+    if "sample_question" in st.session_state and st.session_state.sample_question:
+        prompt = st.session_state.sample_question
+        st.session_state.sample_question = None
+
+        # Add user message
+        st.session_state.messages.append({"role": "user", "content": prompt})
+
+        # Get response
+        try:
+            response = st.session_state.chatbot.ask(prompt)
+            st.session_state.messages.append({
+                "role": "assistant",
+                "content": response["answer"],
+                "sources": response["sources"]
+            })
+        except Exception as e:
+            st.session_state.messages.append({
+                "role": "assistant",
+                "content": f"Error: {str(e)}"
+            })
+        st.rerun()
+
 # Display chat messages
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
@@ -78,15 +134,51 @@ if prompt := st.chat_input("Ask a question about your documents..."):
                     "content": error_msg
                 })
 
-# Sidebar with minimal controls
+# Sidebar with enhanced controls
 with st.sidebar:
     st.header("ℹ️ About")
     st.write("This chatbot answers questions about PDFs in the backend/pdfs folder.")
 
     st.divider()
 
+    # Model Information
+    st.subheader("🤖 AI Model")
+    import os
+    from dotenv import load_dotenv
+    load_dotenv()
+    provider = os.getenv("LLM_PROVIDER", "gemini")
+    model = os.getenv("GEMINI_MODEL", "gemini-1.5-flash")
+    st.info(f"**Provider:** {provider.upper()}\n\n**Model:** {model}")
+
+    st.divider()
+
+    # Chat Statistics
+    st.subheader("📊 Statistics")
+    user_messages = len([m for m in st.session_state.messages if m["role"] == "user"])
+    st.metric("Questions Asked", user_messages)
+    st.metric("Total Messages", len(st.session_state.messages))
+
+    st.divider()
+
+    # PDF Files List
+    st.subheader("📚 Loaded Documents")
+    try:
+        import glob
+        pdf_files = glob.glob("backend/pdfs/*.pdf")
+        if pdf_files:
+            st.success(f"**{len(pdf_files)} PDFs loaded:**")
+            for pdf in pdf_files:
+                filename = pdf.split("\\")[-1].split("/")[-1]
+                st.text(f"• {filename}")
+        else:
+            st.warning("No PDFs found")
+    except Exception as e:
+        st.error("Could not load PDF list")
+
+    st.divider()
+
     # Clear chat button
-    if st.button("🗑️ Clear Chat History"):
+    if st.button("🗑️ Clear Chat History", use_container_width=True):
         st.session_state.messages = []
         st.session_state.chatbot.clear_memory()
         st.rerun()
@@ -95,3 +187,4 @@ with st.sidebar:
 
     # Display info
     st.caption("Powered by LangChain + Google Gemini")
+    st.caption("Made with ❤️ by QSS")
