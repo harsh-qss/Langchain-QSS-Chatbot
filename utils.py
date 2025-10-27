@@ -196,3 +196,124 @@ def format_sources(source_documents: List[Document]) -> str:
     if sources:
         return "\n\n**Sources:** " + ", ".join(sources)
     return ""
+
+
+def get_faiss_document_sources(faiss_index) -> set:
+    """
+    Get all source filenames currently indexed in FAISS.
+
+    Args:
+        faiss_index: FAISS vector store instance
+
+    Returns:
+        Set of source filenames
+    """
+    try:
+        sources = set()
+        # Access the docstore to get all documents
+        if hasattr(faiss_index, 'docstore'):
+            for doc_id in range(len(faiss_index.docstore._dict)):
+                try:
+                    doc = faiss_index.docstore.search(str(doc_id))
+                    if doc and hasattr(doc, 'metadata'):
+                        source = doc.metadata.get('source')
+                        if source:
+                            sources.add(source)
+                except Exception:
+                    pass
+        return sources
+    except Exception as e:
+        print(f"Warning: Could not retrieve FAISS sources: {str(e)}")
+        return set()
+
+
+def remove_documents_from_faiss_by_source(faiss_index, source_filename: str):
+    """
+    Remove all chunks of a specific document from FAISS index by source filename.
+
+    Args:
+        faiss_index: FAISS vector store instance
+        source_filename: Filename to remove (e.g., 'Policy.pdf')
+
+    Returns:
+        Number of documents removed
+    """
+    try:
+        removed_count = 0
+        if not hasattr(faiss_index, 'docstore') or not hasattr(faiss_index, 'index_to_docstore_id'):
+            return removed_count
+
+        # Collect IDs to remove
+        ids_to_remove = []
+        docstore_dict = faiss_index.docstore._dict
+
+        for idx, doc_id in enumerate(faiss_index.index_to_docstore_id):
+            try:
+                doc = docstore_dict.get(doc_id)
+                if doc and hasattr(doc, 'metadata'):
+                    if doc.metadata.get('source') == source_filename:
+                        ids_to_remove.append(idx)
+            except Exception:
+                pass
+
+        # Remove in reverse order to maintain index integrity
+        for idx in sorted(ids_to_remove, reverse=True):
+            try:
+                # Remove from index
+                faiss_index.index.remove_ids(np.array([idx], dtype=np.int64))
+                # Remove from docstore
+                if idx < len(faiss_index.index_to_docstore_id):
+                    doc_id = faiss_index.index_to_docstore_id[idx]
+                    if hasattr(faiss_index.docstore, '_dict') and doc_id in faiss_index.docstore._dict:
+                        del faiss_index.docstore._dict[doc_id]
+                removed_count += 1
+            except Exception as e:
+                print(f"Warning: Could not remove document at index {idx}: {str(e)}")
+
+        return removed_count
+    except Exception as e:
+        print(f"Error removing documents from FAISS: {str(e)}")
+        return 0
+
+
+def add_documents_to_faiss(faiss_index, new_documents: List[Document], embeddings):
+    """
+    Add new documents to an existing FAISS index without rebuilding.
+
+    Args:
+        faiss_index: FAISS vector store instance
+        new_documents: List of Document objects to add
+        embeddings: Embeddings instance for encoding
+
+    Returns:
+        Updated FAISS index
+    """
+    try:
+        if not new_documents:
+            return faiss_index
+
+        # Generate embeddings for new documents
+        print(f"Embedding {len(new_documents)} new documents...")
+        texts = [doc.page_content for doc in new_documents]
+        new_embeddings_list = embeddings.embed_documents(texts)
+
+        # Import numpy for FAISS operations
+        import numpy as np
+
+        # Add to FAISS index
+        new_embeddings_array = np.array(new_embeddings_list, dtype=np.float32)
+        faiss_index.index.add(new_embeddings_array)
+
+        # Add to docstore
+        if hasattr(faiss_index, 'docstore'):
+            for doc in new_documents:
+                # Generate new doc_id
+                max_id = max([int(k) for k in faiss_index.docstore._dict.keys() if k.isdigit()], default=-1)
+                new_id = str(max_id + 1)
+                faiss_index.docstore._dict[new_id] = doc
+                faiss_index.index_to_docstore_id.append(new_id)
+
+        return faiss_index
+    except Exception as e:
+        print(f"Error adding documents to FAISS: {str(e)}")
+        return faiss_index

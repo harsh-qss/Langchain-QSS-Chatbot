@@ -1,6 +1,7 @@
 """
 Simple PDF Chatbot - Streamlit Interface
 PDFs are automatically loaded from backend/pdfs folder
+Features live PDF monitoring with real-time updates
 """
 
 import streamlit as st
@@ -13,11 +14,26 @@ st.set_page_config(
     layout="centered"
 )
 
+# Define callback function for PDF updates
+def on_pdf_update(event_type: str, filename: str):
+    """Handle PDF file updates with Streamlit notifications."""
+    if event_type == "created":
+        st.toast(f"📄 New PDF added: {filename}", icon="✅")
+    elif event_type == "deleted":
+        st.toast(f"🗑️ PDF removed: {filename}", icon="⏹️")
+    elif event_type == "modified":
+        st.toast(f"🔄 PDF updated: {filename}", icon="🔄")
+    elif event_type == "error":
+        st.toast(f"❌ Error: {filename}", icon="⚠️")
+
 # Initialize chatbot in session state
 if "chatbot" not in st.session_state:
     with st.spinner("Loading PDFs and initializing chatbot..."):
         try:
-            st.session_state.chatbot = create_chatbot()
+            st.session_state.chatbot = create_chatbot(
+                enable_watcher=True,
+                on_update_callback=on_pdf_update
+            )
             st.session_state.messages = []
         except Exception as e:
             st.error(f"Error initializing chatbot: {str(e)}")
